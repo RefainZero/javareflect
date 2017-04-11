@@ -16,13 +16,12 @@ public class TestReflect {
 		Filter f1 = new Filter();
 		f1.setId(10);//查询ID为10的用户信息
 		System.out.println(query(f1));
-		query(f1);
 		Filter f2 = new Filter();
 		f2.setUserName("lucy");//查询用户名为Lucy的用户信息
-		query(f2);
+		System.out.println(query(f2));
 		Filter f3 = new Filter();
-		f3.setEmail("abc@qq.com");//查询邮箱为abc@qq.com的用户信息
-		query(f3);
+		f3.setEmail("liu@sina.com,zh@163.com,7777@qq.com");//查询邮箱为abc@qq.com的用户信息
+		System.out.println(query(f3));
 	}
 
 	@SuppressWarnings("unchecked")
@@ -50,7 +49,26 @@ public class TestReflect {
 				Method method = c.getMethod(methodName);
 				invoke = method.invoke(f);
 //				拼接sql
-				
+				if (invoke==null||invoke instanceof Integer&& ((Integer)(invoke)==0)) {
+					continue;
+				}
+				if (invoke instanceof String) {
+					if ((boolean)(invoke.toString()).contains(",")) {
+						String[] value = ((String) invoke.toString()).split(",");
+						sb.append(" and ").append(fieldName+" in ");
+						sb.append("(");
+						for (String values : value) {
+							sb.append("'").append(values).append("'").append(",");
+						}
+//						删掉最后的逗号
+						sb.deleteCharAt(sb.length()-1);
+						sb.append(')');
+					}else {
+						sb.append(" and ").append(fieldName+" = ").append("'").append(invoke).append("'");
+					}
+				}else {
+					sb.append(" and ").append(fieldName+" = ").append(invoke);
+				}
 			} catch (NoSuchMethodException | SecurityException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -64,7 +82,6 @@ public class TestReflect {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-			sb.append(" and ").append(fieldName+" = ").append(invoke);
 		}
 		return sb.toString();
 	}
